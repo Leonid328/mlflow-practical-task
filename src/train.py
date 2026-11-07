@@ -67,12 +67,12 @@ def log_plots(model: object, X_test: object, y_test: object) -> None:
     fig_cm, ax_cm = plt.subplots(figsize=(5, 4))
     ConfusionMatrixDisplay.from_estimator(model, X_test, y_test, ax=ax_cm, cmap="Blues")
     fig_cm.tight_layout()
-    # TODO: Log fig_cm as an artifact named "confusion_matrix.png"
+    mlflow.log_figure(fig_cm, "confusion_matrix.png")
 
     fig_roc, ax_roc = plt.subplots(figsize=(5, 4))
     RocCurveDisplay.from_estimator(model, X_test, y_test, ax=ax_roc)
     fig_roc.tight_layout()
-    # TODO: Log fig_roc as an artifact named "roc_curve.png"
+    mlflow.log_figure(fig_roc, "roc_curve.png")
 
     plt.close(fig_cm)
     plt.close(fig_roc)
@@ -115,7 +115,18 @@ def run_training(
     # 6. Call 'log_plots()' to ensure the figures are saved to the current run.
     # -------------------------------------------------------------------------
 
-    # TODO: Implement MLflow logic here
+    mlflow.set_experiment(experiment_name)
+    with mlflow.start_run(run_name=f"{model_type}-train"):
+        mlflow.log_param("model_type", model_type)
+        mlflow.log_params({k: v for k, v in params.items() if k != "model_type"})
+        mlflow.log_metrics(metrics)
+        mlflow.sklearn.log_model(
+            model,
+            name="model",
+            input_example=X_test.iloc[:5],
+        )
+        log_plots(model, X_test, y_test)
+
     print(f"Training of {model_type} complete.")
 
 

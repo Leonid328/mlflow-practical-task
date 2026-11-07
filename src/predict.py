@@ -38,8 +38,11 @@ def make_predictions(
     # 2. Use the MLflow 'pyfunc' flavour to load the model from the URI.
     # -------------------------------------------------------------------------
 
-    # TODO: Implement model loading logic here
-    model = None
+    if version is not None:
+        model_uri = f"models:/{model_name}/{version}"
+    else:
+        model_uri = f"models:/{model_name}@{alias}"
+    model = mlflow.pyfunc.load_model(model_uri)
 
     df = load_data(data_path)
     if limit:
@@ -55,7 +58,13 @@ def make_predictions(
         #    Otherwise, print the top 20 rows of the DataFrame to the console.
         # -------------------------------------------------------------------------
 
-        # TODO: Implement prediction logic here
+        predicted = model.predict(X)
+        results = pd.DataFrame({"actual": y.to_numpy(), "predicted": predicted})
+        if output:
+            results.to_csv(output, index=False)
+            print(f"Saved predictions to {output}")
+        else:
+            print(results.head(20).to_string(index=False))
     else:
         print("Model not loaded in make_predictions(). Implement loading logic.")
 

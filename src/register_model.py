@@ -37,8 +37,25 @@ def register_best_model(
     #    you just registered.
     # -------------------------------------------------------------------------
 
-    # TODO: Implement model registration logic here
-    result = None
+    experiment = mlflow.get_experiment_by_name(experiment_name)
+    if experiment is None:
+        raise ValueError(f"Experiment '{experiment_name}' was not found.")
+
+    runs = mlflow.search_runs(
+        experiment_ids=[experiment.experiment_id],
+        order_by=[f"metrics.{metric} DESC"],
+        max_results=1,
+    )
+    if runs.empty:
+        raise ValueError(f"Experiment '{experiment_name}' has no runs.")
+
+    run_id = runs.iloc[0]["run_id"]
+    result = mlflow.register_model(
+        model_uri=f"runs:/{run_id}/model",
+        name=model_name,
+    )
+    client = MlflowClient()
+    client.set_registered_model_alias(model_name, alias, str(result.version))
     print(f"Model version {result.version} registered as '{model_name}' with alias '{alias}'.")
 
 

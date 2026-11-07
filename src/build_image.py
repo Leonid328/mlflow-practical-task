@@ -32,8 +32,12 @@ def build_serving_image(
     #    - Set 'env_manager' to "local".
     # -------------------------------------------------------------------------
 
-    # TODO: Implement Docker Image Building
-    model_uri = None
+    model_uri = f"models:/{model_name}@{alias}"
+    mlflow.models.build_docker(
+        model_uri=model_uri,
+        name=image_name,
+        env_manager="local",
+    )
     print(f"Docker image '{image_name}' built for model: {model_uri}")
 
 
